@@ -1,23 +1,17 @@
 '
 '
-' <MS-EXCEL VBA code: format_as_wikitable generates a wiki-Table from a EXCEL-cellrange>
+' This VBA code generates wiki-table from a selected Excel cell range.
 '
 ' (c) Othmar Lippuner, 2006-2015
-'     Version V20; last changed 11.12.2013
-'     Version V21; last changed 11.12.2015; Accept Https as external link
 '
-'licenced under      GNU GENERAL PUBLIC LICENSE at  10 April 2006 by author <Othmar Lippuner>
+' Licenced under     GNU GENERAL PUBLIC LICENSE at 10 April 2006 by author <Othmar Lippuner>
 '                    GNU-License Version from 2, June 1991
 '
-' Everyone is permitted to copy and distribute verbatim copies
-' of this license document, but changing it is not allowed.
+' Installation:
+'            1. Copy the macro code into a textfile FORMAT_AS_WIKITABLE.BAS
+'            2. Import the macro file FORMAT_AS_WIKITABLE.BAS into a VBA-project of your Excel-File
 '
-'Installation:
-'            1. Copy the Makrocode into a textfile FORMAT_AS_WIKITABLE.BAS
-'            2. Import the macrofile FORMAT_AS_WIKITABLE_V17.BAS into a VBA-project of your EXCEL-File
-'
-'Usage:
- 
+' Usage:
 '            1. Select the range you wan't to publish in EXCEL
 '            2. Execute the macro FORMAT_AS_WIKITABLE
 '            3. copy the complete wiki-text in outputtable WIKIOUTPUT into clipboard
@@ -25,11 +19,11 @@
 '
 '    The main formatting attributes of excel are converted into wiki-parameters
 '    Some strategies are applied to minimize the wiki-textcode generated, e.g. if possible
-'    attributes are written als lineparameter instead of cellparameters thus reducing
+'    attributes are written as lineparameter instead of cellparameters thus reducing
 '    textvolume and DB-load to the wikiservers, an increasing the readability of the tablecode
 '    while editing.
 '
-' Attributes converted
+' Attributes converted:
 '              bold
 '              italic
 '              textsize
@@ -40,38 +34,25 @@
 '              verticalaligment
 '              numberformats
 '
-'
-' Attributes not converted
+' Attributes not converted:
 '              character font just uses the standard font settings of your favortie wiki-skin
 '              styles
-'              borders  just uses the standard border settings of class="wikitable"
+'              borders just uses the standard border settings of class="wikitable"
 '
-' not supported features
+' Unsupported features:
 '              nested table (excel can not do that)
 '              connected cells in EXCEL, please dont use connected cells
 '              charts or any other graphical gagets
 '
+' Software Requirements:
+'    Software was originally built and tested tested under Excel 2003, but has been verified on Excel 2010.
+'    It is up to the user to test in other versions.
 '
-'Software Requirements
-'    Software is tested under EXCEL 2003, should be fine also with EXCEL-2000, its up to you to check it out
-'
-'    Caution: Any worksheet named "wikioutput" will be deleted, recreated and then overwritten
+'  *Caution:* Any worksheet named "wikioutput" will be deleted, recreated and then overwritten
 '             when executing the macro. In other words: By executing the macro 'format_as_wikitable'
 '             you accept that the name and content of this worksheet is reserved to the macro
 '            'format_as_wikitable'.
 '
-'   Version history
-'
-'           V10     10.4.2006, released
-'           V11     17.4.2006, ernonous formatting corrected
-'           V12     26.5.2006, verify that selection is a cellrange
-'           V13     28.9.2006, V1.3: replace linebreaks in cellcontent with a Wiki-<BR>
-'           V14     15.2.2006, V1.4: empty cells get &nbsp for correct rendering of cellheight
-'           V15     21.4.2007  V1.5: class="prettytable" instead of [[Prettytable]]
-'           V17     30.7.2007  V1.7: width and height rounded to integer px
-'           V18     07.4.2011  V1.8: Force numeric content of table to be aligned to the right
-'           V19     17.8.2013  V1.9: obsoleted <hiddentext> and [home] wikilink updated
-'           V20     11.12.2013 V2.0: added an option to output a simple table
 '
 '    Copyright (C) <2006>  <Othmar Lippuner, Switzerland>
 '
@@ -92,19 +73,8 @@
 '
 '
 '
-'    format_as_wikitablle.bas version 13, Copyright (C) Othmar Lippuner
-'    format_as_wikitablle.bas comes with ABSOLUTELY NO WARRANTY;
-'    This is free software, and you are welcome to redistribute it
-'    under certain conditions; consult the GNU-Public license for these
-'    conditions.
-'
-'
-'
-'  <Othmar Lippuner>, 10 April 2006  meet me at [[:de:Benutzer Diskussion:Ollio]]
-'
-'
 Option Explicit
-Const co = 1 ' all output is written in column 1
+Const co = 1 ' All output is written in column 1
 Const VersionID = "V2.0"
 Const prettytable = True
 Const simpleTable = False 'added 11.12.2013
@@ -112,18 +82,18 @@ Const emptyCell_nbsp = True '<< 5.3.2007
 Dim iline As Long
 Dim icolumn As Long
 Dim os As String
-Dim oline As Long 'lineindex in outputtable
+Dim oline As Long ' Lineindex in outputtable
 Dim iLineMax As Long
 Dim iColumnMax As Long
-Dim selrange As Range  'inputrange
-Dim orange As Range 'outputrange
+Dim selrange As Range  ' inputrange
+Dim orange As Range ' outputrange
 Dim outtabName As String
 Dim tableformatting As String
 Dim sh As Worksheet
 Dim wasUnderlined As Boolean  ' remember Textdecoration:underline state
- 
-' document the setting of lookahead attributation in line parameter
-' if lineparameter is set then skip over cell-attributation
+
+' Document the setting of lookahead attributation in line parameter
+' If lineparameter is set then skip over cell-attributation
 Dim lineattribut_borders_set                As Boolean
 Dim lineattribut_fontsize_set               As Boolean
 Dim lineattribut_bold_set                   As Boolean
@@ -132,45 +102,42 @@ Dim lineattribut_backgroundcolor_set        As Boolean
 Dim lineattribut_fondcolor_set              As Boolean
 Dim lineattribut_Halignment_set             As Boolean
 Dim lineattribut_Valignment_set             As Boolean
- 
+
 Dim lineattribut_borders    As Long
 Dim lineattribut_fontsize   As Long
 Dim lineattribut_backgroundcolor    As Long
 Dim lineattribut_fondcolor  As Long
 Dim lineattribut_Halignment As Long
 Dim lineattribut_Valignment As Long
+
  
- 
- 
- 
- 
-Function hexdigit(wrk As Long) As String
-If wrk > 15 Then
-  MsgBox "illegal hexdigit value : " & wrk
-Else
-  Select Case wrk
-        Case 0:      hexdigit = "0"
-        Case 1:      hexdigit = "1"
-        Case 2:      hexdigit = "2"
-        Case 3:      hexdigit = "3"
-        Case 4:      hexdigit = "4"
-        Case 5:      hexdigit = "5"
-        Case 6:      hexdigit = "6"
-        Case 7:      hexdigit = "7"
-        Case 8:      hexdigit = "8"
-        Case 9:      hexdigit = "9"
-        Case 10:     hexdigit = "A"
-        Case 11:     hexdigit = "B"
-        Case 12:     hexdigit = "C"
-        Case 13:     hexdigit = "D"
-        Case 14:     hexdigit = "E"
-        Case 15:     hexdigit = "F"
-  End Select
-  End If
-End Function 'hexdigit
- 
+    Function hexdigit(wrk As Long) As String
+    If wrk > 15 Then
+      MsgBox "illegal hexdigit value : " & wrk
+      Else
+      Select Case wrk
+            Case 0:      hexdigit = "0"
+            Case 1:      hexdigit = "1"
+            Case 2:      hexdigit = "2"
+            Case 3:      hexdigit = "3"
+            Case 4:      hexdigit = "4"
+            Case 5:      hexdigit = "5"
+            Case 6:      hexdigit = "6"
+            Case 7:      hexdigit = "7"
+            Case 8:      hexdigit = "8"
+            Case 9:      hexdigit = "9"
+            Case 10:     hexdigit = "A"
+            Case 11:     hexdigit = "B"
+            Case 12:     hexdigit = "C"
+            Case 13:     hexdigit = "D"
+            Case 14:     hexdigit = "E"
+            Case 15:     hexdigit = "F"
+      End Select
+      End If
+      End Function ' Hexdigit
+    
 Function myhex(num As Long) As String
-'konvert a 16-Bit long to HEX-String inkl fixecd leading zeros
+' Convert a 16-Bit long to HEX-String & fixes leading zeros
 Dim lastdivisor As Long
 Dim divisor As Long
 Dim wrk As Long
@@ -186,22 +153,21 @@ If wrk > 16 ^ 6 Then
         wrk = (num Mod divisor) \ lastdivisor
         result = hexdigit(wrk) & result
         lastdivisor = divisor
-        If k < 7 Then ' avoid overflow
+        If k < 7 Then ' Avoid overflow
             divisor = divisor * 16
         End If
     Next k
     myhex = result
-End If
-End Function 'myhex
+    End If
+End Function ' myhex
+
  
- 
-Private Sub write_tablehead()
-tableformatting = " <!-- generated with [[w:de:Wikipedia:Technik/Text/Basic/EXCEL-Tabellenumwandlung]] " & VersionID & " -->"
-If prettytable Then
-   tableformatting = " class=" & """wikitable""" & tableformatting
-End If
-oline = oline + 1: orange.Cells(oline, 1) = "{|" & tableformatting
-End Sub 'write_tablehead
+ Private Sub write_tablehead()
+ If prettytable Then
+    tableformatting = " class=" & """wikitable"""
+    End If
+ oline = oline + 1: orange.Cells(oline, 1) = "{|" & tableformatting
+ End Sub ' write_tablehead
  
 Private Sub write_lineheader()
 Dim col_lookahead As Long
@@ -214,66 +180,64 @@ lineattribut_backgroundcolor_set = True
 lineattribut_fondcolor_set = True
 lineattribut_Halignment_set = True
 lineattribut_Valignment_set = True
- 
-' init variables for delta-detection
+
+' Init variables for delta-detection
 ' xxxx lineattribut_borders = selrange.Cells(iline, 1).Borders
 If Not IsNull(selrange.Cells(iline, 1).Font.Size) Then
      lineattribut_fontsize = selrange.Cells(iline, 1).Font.Size
-Else
-     lineattribut_fontsize = 10 'take default
-End If
+     Else
+     lineattribut_fontsize = 10 'Take default
+     End If
 If Not IsNull(selrange.Cells(iline, 1).Font.Bold) Then
     lineattribut_bold_set = selrange.Cells(iline, 1).Font.Bold
-Else
+    Else
     lineattribut_bold_set = False
-End If
+    End If
 If Not IsNull(selrange.Cells(iline, 1).Font.Italic) Then
     lineattribut_italic_set = selrange.Cells(iline, 1).Font.Italic
-Else
+    Else
     lineattribut_italic_set = False
-End If
+    End If
 lineattribut_backgroundcolor = selrange.Cells(iline, 1).Interior.Color
 lineattribut_fondcolor = selrange.Cells(iline, 1).Font.Color
 lineattribut_Halignment = selrange.Cells(iline, 1).HorizontalAlignment
 lineattribut_Valignment = selrange.Cells(iline, 1).VerticalAlignment
-' loop on line for deltadectection
+' Loop on line for deltadectection
 For col_lookahead = 2 To iColumnMax
 ' xxxx   If lineattribut_borders <> selrange.Cells(iline, 1).Borders Then
 ' xxxx      lineattribut_borders_set = False: End If
- 
+
     If Not IsNull(selrange.Cells(iline, col_lookahead).Font.Size) Then
-        If lineattribut_fontsize <> selrange.Cells(iline, col_lookahead).Font.Size Then
-            lineattribut_fontsize_set = False: End If
-    End If
-    If Not selrange.Cells(iline, col_lookahead).Font.Bold Then
-        lineattribut_bold_set = False: End If
-    If Not selrange.Cells(iline, col_lookahead).Font.Italic Then
-        lineattribut_italic_set = False: End If
-    If lineattribut_backgroundcolor <> selrange.Cells(iline, col_lookahead).Interior.Color Then
-        lineattribut_backgroundcolor_set = False:
+            If lineattribut_fontsize <> selrange.Cells(iline, col_lookahead).Font.Size Then
+                lineattribut_fontsize_set = False: End If
         End If
-    If lineattribut_fondcolor <> selrange.Cells(iline, col_lookahead).Font.Color Then
-        lineattribut_fondcolor_set = False: End If
-    If lineattribut_Halignment <> selrange.Cells(iline, col_lookahead).HorizontalAlignment Then
-        lineattribut_Halignment_set = False: End If
-    If lineattribut_Valignment <> selrange.Cells(iline, col_lookahead).VerticalAlignment Then
-        lineattribut_Valignment_set = False: End If
-Next col_lookahead
-If Not simpleTable Then 'added 11.12.2013
-    lineheader = formatstring_for_a_linecontent
-End If
-' write linetrailer
-oline = oline + 1: orange.Cells(oline, 1) = "|- " & lineheader
-End Sub 'write_lineheader
- 
+        If Not selrange.Cells(iline, col_lookahead).Font.Bold Then
+            lineattribut_bold_set = False: End If
+        If Not selrange.Cells(iline, col_lookahead).Font.Italic Then
+            lineattribut_italic_set = False: End If
+        If lineattribut_backgroundcolor <> selrange.Cells(iline, col_lookahead).Interior.Color Then
+            lineattribut_backgroundcolor_set = False:
+            End If
+        If lineattribut_fondcolor <> selrange.Cells(iline, col_lookahead).Font.Color Then
+            lineattribut_fondcolor_set = False: End If
+        If lineattribut_Halignment <> selrange.Cells(iline, col_lookahead).HorizontalAlignment Then
+            lineattribut_Halignment_set = False: End If
+        If lineattribut_Valignment <> selrange.Cells(iline, col_lookahead).VerticalAlignment Then
+            lineattribut_Valignment_set = False: End If
+            Next col_lookahead
+    If Not simpleTable Then ' Added 11.12.2013
+        lineheader = formatstring_for_a_linecontent
+        End If
+    ' Write linetrailer
+    oline = oline + 1: orange.Cells(oline, 1) = "|- " & lineheader
+    End Sub ' Write_lineheader
+    
 Private Sub write_linetrailer()
-' write linebuffer to output  ==== anyway sofare it is empty
+' Write linebuffer to output  ==== anyway sofare it is empty
 oline = oline + 1: orange.Cells(oline, 1) = os
-' flush the linebuffer
+' Flush the linebuffer
 os = ""
-End Sub 'write_linetrailer
- 
- 
+End Sub ' write_linetrailer
  
 Function excelHexStr2HTML(str As String) As String
 Dim a_str As String
@@ -284,33 +248,32 @@ c_str = Right(str, 2)
 b_str = Left(Right(str, 4), 2)
 excelHexStr2HTML = c_str & b_str & a_str
 End Function
- 
+
 Private Function skip_underline(str As String) As String
 Dim k As Long
 Dim so As String
 so = ""
-' skip unwanted underscores in EXCEL-transforms
+' Skip unwanted underscores in Excel transforms
 For k = 1 To Len(str)
    If Mid$(str, k, 1) <> "_" Then
         so = so & Mid$(str, k, 1)
    End If
-Next k
+   Next k
 skip_underline = so
 End Function
- 
  
 Private Function process_cellcontent(cellcontent As String) As String
 Const verbose = False
 Dim hyperlink As String
-'dont use .NumberFormatlocal because it
+' Don't use .NumberFormatlocal because it
 ' returns wrong Dateformatstrings "[$-807]TTTT, T. MMMM JJJJ"; instead of "TTTT, T. MMMM JJJJ;" that won't work with format
 With selrange.Cells(iline, icolumn)
 If verbose Then
     Debug.Print iline; "/"; icolumn, .NumberFormat, .Value
-End If
+    End If
 If .NumberFormat <> "General" And .NumberFormat <> "Standard" Then
      cellcontent = skip_underline(Format(.Value, .NumberFormat))
-Else
+     Else
     If cellcontent = "" Then       '<< 15.2.2007
         If Not emptyCell_nbsp Then '<< 05.3.2007
             cellcontent = " " '<< 05.3.2007
@@ -320,45 +283,45 @@ Else
     Else
         cellcontent = cellcontent
     End If                     '<< 15.2.2007
-End If
- 
+    End If
+
 ' Process hyperlinks
 '----------------------------------------
 If .Hyperlinks.Count > 0 Then
     hyperlink = .Hyperlinks(1).Address
     If (Len(WorksheetFunction.Substitute(hyperlink, "http://", "")) <> Len(hyperlink)) _
-    Or (Len(WorksheetFunction.Substitute(hyperlink, "https://", "")) <> Len(hyperlink)) Then 
+    Or (Len(WorksheetFunction.Substitute(hyperlink, "https://", "")) <> Len(hyperlink)) Then
         'There may be a neater way to do this
         cellcontent = " [" & hyperlink & " " & cellcontent & "]" 'http link
     Else
         cellcontent = " [[" & hyperlink & "|" & cellcontent & "]]" 'assume that anything without http is a local wiki link
     End If
-End If
- 
+    End If
+
 End With
-' V13: replace linebreaks in cellcentent with a Wiku-<BR> to avoid havoc in wiki-rendering
+' V13: replace linebreaks in cellcentent with a Wiki-<BR> to avoid havoc in wiki-rendering
 '      thanks feedback of ManWing2, 26. Sep 2006
 process_cellcontent = Replace(cellcontent, vbLf, "<br />")
 End Function
-
+ 
 'added 11.12.2013
 Private Sub writeHeaderCell(colnr As Long)
 With selrange.Cells(iline, icolumn)
     If .MergeArea.Column = .Column And .MergeArea.Row = .Row Then
         oline = oline + 1: orange.Cells(oline, 1) = "! " & process_cellcontent(selrange.Cells(iline, icolumn))
     End If
-End With
+    End With
 End Sub
-
+ 
 Private Sub writefirstlinecell(colnr As Long)
 With selrange.Cells(iline, icolumn)
     If .MergeArea.Column = .Column And .MergeArea.Row = .Row Then
         oline = oline + 1: orange.Cells(oline, 1) = formatstring_for_a_cellcontent(True, colnr = 1) & " | " & _
                                                     process_cellcontent(selrange.Cells(iline, icolumn))
     End If
-End With
+    End With
 End Sub
- 
+
 Private Sub writecell(colnr As Long)
 With selrange.Cells(iline, icolumn)
     If .MergeArea.Column = .Column And .MergeArea.Row = .Row Then
@@ -369,49 +332,49 @@ With selrange.Cells(iline, icolumn)
                 " | " & process_cellcontent(selrange.Cells(iline, icolumn))
         End If
     End If
-End With
+    End With
 End Sub
- 
+
 Private Sub write_tabletail()
 oline = oline + 1: orange.Cells(oline, 1) = "|}"
 End Sub
+
+ 
+ Function doublequotestring(str As String, Placeholderchar As String) As String
+ Dim k As Long
+ Dim so As String
+ so = ""
+ For k = 1 To Len(str)
+    If Mid$(str, k, 1) = Left(Placeholderchar, 1) Then
+         so = so & """"
+    Else
+         so = so & Mid$(str, k, 1)
+    End If
+    Next k
+ doublequotestring = so
+ End Function
  
  
-Function doublequotestring(str As String, Placeholderchar As String) As String
-Dim k As Long
-Dim so As String
-so = ""
-For k = 1 To Len(str)
-   If Mid$(str, k, 1) = Left(Placeholderchar, 1) Then
-        so = so & """"
-   Else
-        so = so & Mid$(str, k, 1)
-   End If
-Next k
-doublequotestring = so
-End Function
- 
- 
-Function WorksheetExits(tabname As String) As Boolean
-Dim found As Boolean
-found = False
-On Error GoTo err_exit
-Worksheets(tabname).Select
-found = True
-err_exit:
-WorksheetExits = found
-End Function 'WorksheetExits
+ Function WorksheetExits(tabname As String) As Boolean
+ Dim found As Boolean
+ found = False
+ On Error GoTo err_exit
+ Worksheets(tabname).Select
+ found = True
+ err_exit:
+ WorksheetExits = found
+ End Function ' WorksheetExits
  
 Public Sub Format_as_wikitable()
-' implicit parameter: selected range
+' Implicit parameter: selected range
 ' writes the output into table: wikioutput
-' caution if this table exists it is deleted !!!
+' caution: if this table exists it is deleted !!!
     Dim startRow As Integer 'added 11.12.2013
-
-If Not TypeOf Selection Is Range Then
+ 
+    If Not TypeOf Selection Is Range Then
     MsgBox "Error: You must select a cellrange, to convert to a wiki-table, but you " _
     & vbCrLf & " have selected a " & TypeName(Selection)
-Else
+    Else
     Set selrange = Selection
     wasUnderlined = False
     iLineMax = selrange.Rows.Count
@@ -455,200 +418,200 @@ Else
        write_linetrailer
     Next iline
     write_tabletail
-End If 'Not TypeOf selrange Is Range Then
+    End If ' Not TypeOf selrange Is Range Then
 End Sub
- 
- 
-Function formatstring_for_a_cellcontent(firstline As Boolean, firstrow As Boolean) As String
-Dim str As String
-Dim stylestring As String
-Dim attribute_String As String
-Dim colhexval As String
-Dim prop As String
-stylestring = ""
-attribute_String = ""
-With selrange.Cells(iline, icolumn)
-   ' Determine backgroundcolor_prop
-   '----------------------------------------
-   If Not lineattribut_backgroundcolor_set Then
-        colhexval = excelHexStr2HTML(myhex(.Interior.Color))
-        prop = "@background-color:#" & colhexval
-        ' Apply backgroundcolor_prop to Stylestring
-        If colhexval <> "FFFFFF" Then 'don't write defaultvalue for white, to help to save wikidb-tablespace
-             If stylestring = "" Then
-                   stylestring = prop
-                Else
-                  stylestring = stylestring & ";" & prop
-              End If
-        End If
-   End If
 
-    ' Added by Thomas Tausend 4.7.2011 
-    ' If cell contains a numeric value align to the right!
-    If IsNumeric(.Value) Then
-        prop = "align=@right@"
-        attribute_String = attribute_String & " " & prop
+ 
+ Function formatstring_for_a_cellcontent(firstline As Boolean, firstrow As Boolean) As String
+ Dim str As String
+ Dim stylestring As String
+ Dim attribute_String As String
+ Dim colhexval As String
+ Dim prop As String
+ stylestring = ""
+ attribute_String = ""
+ With selrange.Cells(iline, icolumn)
+    ' Determine backgroundcolor_prop
+    '----------------------------------------
+    If Not lineattribut_backgroundcolor_set Then
+         colhexval = excelHexStr2HTML(myhex(.Interior.Color))
+         prop = "@background-color:#" & colhexval
+         ' Apply backgroundcolor_prop to Stylestring
+         If colhexval <> "FFFFFF" Then 'don't write defaultvalue for white, to help to save wikidb-tablespace
+              If stylestring = "" Then
+                    stylestring = prop
+                 Else
+                   stylestring = stylestring & ";" & prop
+               End If
+         End If
     End If
-    ' / Added by Thomas Tausend 4.7.2011 
-
-   ' Determine Borders_prop
-   '----------------------------------------
-   '.Borders
-   ' do something
- 
+  
+     ' Added by Thomas Tausend 4.7.2011
+     ' If cell contains a numeric value align to the right!
+     If IsNumeric(.Value) Then
+         prop = "align=@right@"
+         attribute_String = attribute_String & " " & prop
+     End If
+     ' / Added by Thomas Tausend 4.7.2011
+  
+    ' Determine Borders_prop
+    '----------------------------------------
+    '.Borders
+    ' do something
+    
    ' Determine Width_prop
-   '----------------------------------------
-   If firstline Then
-      prop = "width=@" & Round(.Width, 0) & "@" '<V17
-   ' Apply Width_prop to Stylestring
-      attribute_String = attribute_String & " " & prop
-    End If
- 
+      '----------------------------------------
+      If firstline Then
+         prop = "width=@" & Round(.Width, 0) & "@" '<V17
+      ' Apply Width_prop to Stylestring
+         attribute_String = attribute_String & " " & prop
+       End If
+       
    ' Determine Colspan_prop
-   '----------------------------------------
-   If .MergeArea.Columns.Count > 1 Then
-      prop = "colspan=@" & .MergeArea.Columns.Count & "@"
-      attribute_String = attribute_String & " " & prop
-    End If
- 
+      '----------------------------------------
+      If .MergeArea.Columns.Count > 1 Then
+         prop = "colspan=@" & .MergeArea.Columns.Count & "@"
+         attribute_String = attribute_String & " " & prop
+       End If
+       
    ' Determine Rowspan_prop
-   '----------------------------------------
-   If .MergeArea.Rows.Count > 1 Then
-      prop = "rowspan=@" & .MergeArea.Rows.Count & "@"
-      attribute_String = attribute_String & " " & prop
-    End If
- 
+      '----------------------------------------
+      If .MergeArea.Rows.Count > 1 Then
+         prop = "rowspan=@" & .MergeArea.Rows.Count & "@"
+         attribute_String = attribute_String & " " & prop
+       End If
+       
       ' Determine Font_prop
-   '========================================
-   '.Font
-   ' Determine Font prop font.size
-   '----------------------------------------
-    With .Font
-       If Not IsNull(.Size) And .Size <> 10 And Not lineattribut_fontsize_set Then  ' trapped ISnull-Condition and ignore standard fontsize
-            prop = "font-size:" & .Size
-            If stylestring = "" Then
-                   stylestring = "@" & prop & "pt"
-                Else
-                  stylestring = stylestring & ";" & prop & "pt"
+         '========================================
+         '.Font
+         ' Determine Font prop font.size
+         '----------------------------------------
+          With .Font
+             If Not IsNull(.Size) And .Size <> 10 And Not lineattribut_fontsize_set Then  ' trapped ISnull-Condition and ignore standard fontsize
+                  prop = "font-size:" & .Size
+                  If stylestring = "" Then
+                         stylestring = "@" & prop & "pt"
+                      Else
+                        stylestring = stylestring & ";" & prop & "pt"
+                   End If
              End If
-       End If
-   ' Determine Font prop font.bold
-   '----------------------------------------
-       If .Bold And Not lineattribut_bold_set Then
-            prop = "font-weight:bold"
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
+         ' Determine Font prop font.bold
+         '----------------------------------------
+             If .Bold And Not lineattribut_bold_set Then
+                  prop = "font-weight:bold"
+                  If stylestring = "" Then
+                         stylestring = "@" & prop
+                      Else
+                        stylestring = stylestring & ";" & prop
+                   End If
              End If
-       End If
-      ' Determine Font prop underline
-   '----------------------------------------
-       If .Italic Then
-            prop = "font-style:Italic"
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
+            ' Determine Font prop underline
+         '----------------------------------------
+             If .Italic Then
+                  prop = "font-style:Italic"
+                  If stylestring = "" Then
+                         stylestring = "@" & prop
+                      Else
+                        stylestring = stylestring & ";" & prop
+                   End If
              End If
-       End If
+             
  
- 
-      ' Determine Font prop font.italic
-   '----------------------------------------
-       If .Underline = xlUnderlineStyleNone And Not lineattribut_italic_set Then ' toggle switch off
-            If wasUnderlined Then  ' toggle switch off
-                 prop = "text-decoration:none"
-                 wasUnderlined = False ' toggle switch on
-                 If stylestring = "" Then
-                        stylestring = "@" & prop
-                     Else
-                       stylestring = stylestring & ";" & prop
-                  End If
-            End If
-       Else '.Underline <> xlUnderlineStyleNone
-            If Not wasUnderlined Then
-                      prop = "text-decoration:underline"
-                      wasUnderlined = True ' toggle switch on
-                      If stylestring = "" Then
-                             stylestring = "@" & prop
-                          Else
-                            stylestring = stylestring & ";" & prop
-                      End If
-             End If
-       End If
- 
+       ' Determine Font prop font.italic
+          '----------------------------------------
+              If .Underline = xlUnderlineStyleNone And Not lineattribut_italic_set Then ' toggle switch off
+                   If wasUnderlined Then  ' toggle switch off
+                        prop = "text-decoration:none"
+                        wasUnderlined = False ' toggle switch on
+                        If stylestring = "" Then
+                               stylestring = "@" & prop
+                            Else
+                              stylestring = stylestring & ";" & prop
+                         End If
+                   End If
+              Else '.Underline <> xlUnderlineStyleNone
+                   If Not wasUnderlined Then
+                             prop = "text-decoration:underline"
+                             wasUnderlined = True ' toggle switch on
+                             If stylestring = "" Then
+                                    stylestring = "@" & prop
+                                 Else
+                                   stylestring = stylestring & ";" & prop
+                             End If
+                    End If
+              End If
+              
    ' Determine Color prop font.color
-   '----------------------------------------
-       If Not IsNull(.Color) And .Color <> 0 And Not lineattribut_fondcolor_set Then  ' trapped ISnull-Condition and ignore standard color
-            prop = "color:#" & excelHexStr2HTML(myhex(.Color))
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
-             End If
+      '----------------------------------------
+          If Not IsNull(.Color) And .Color <> 0 And Not lineattribut_fondcolor_set Then  ' trapped ISnull-Condition and ignore standard color
+               prop = "color:#" & excelHexStr2HTML(myhex(.Color))
+               If stylestring = "" Then
+                      stylestring = "@" & prop
+                   Else
+                     stylestring = stylestring & ";" & prop
+                End If
+          End If
+       End With
+      ' Determine Height_prop
+      '----------------------------------------
+      '   .Height
+      If firstrow Then
+         prop = "height=@" & Round(.Height, 0) & "@" '<V17
+      ' Apply Height_prop to Stylestring
+         attribute_String = attribute_String & " " & prop  '<V17
        End If
-    End With
-   ' Determine Height_prop
-   '----------------------------------------
-'   .Height
-   If firstrow Then
-      prop = "height=@" & Round(.Height, 0) & "@" '<V17
-   ' Apply Height_prop to Stylestring
-      attribute_String = attribute_String & " " & prop  '<V17
-    End If
-   ' Determine HorizontalAlignment_prop
-   '----------------------------------------
-   '.HorizontalAlignment
-    If .HorizontalAlignment <> xlHAlignLeft And Not lineattribut_Halignment_set Then ' dont write the default
-      prop = ""
-      Select Case .HorizontalAlignment
-        Case xlHAlignRight:     prop = "align=@right@"
-        Case xlHAlignCenter:  prop = "align=@center@"
-      End Select
-      ' Apply HorizontalAlignment_prop to Stylestring
-      attribute_String = attribute_String & " " & prop
-      End If
- 
+      ' Determine HorizontalAlignment_prop
+      '----------------------------------------
+      '.HorizontalAlignment
+       If .HorizontalAlignment <> xlHAlignLeft And Not lineattribut_Halignment_set Then ' dont write the default
+         prop = ""
+         Select Case .HorizontalAlignment
+           Case xlHAlignRight:     prop = "align=@right@"
+           Case xlHAlignCenter:  prop = "align=@center@"
+         End Select
+         ' Apply HorizontalAlignment_prop to Stylestring
+         attribute_String = attribute_String & " " & prop
+         End If
+         
    ' Determine VerticalAlignment_prop
-   '----------------------------------------
-    If .VerticalAlignment <> xlVAlignCenter And Not lineattribut_Halignment_set Then  ' dont write the default
-    prop = ""
-      Select Case .VerticalAlignment
-        Case xlVAlignTop:     prop = "valign=@top@"
-        Case xlVAlignBottom:  prop = "valign=@bottom@"
-      End Select
-      ' Apply VerticalAlignment_prop to Stylestring
-      attribute_String = attribute_String & " " & prop
+      '----------------------------------------
+       If .VerticalAlignment <> xlVAlignCenter And Not lineattribut_Halignment_set Then  ' dont write the default
+       prop = ""
+         Select Case .VerticalAlignment
+           Case xlVAlignTop:     prop = "valign=@top@"
+           Case xlVAlignBottom:  prop = "valign=@bottom@"
+         End Select
+         ' Apply VerticalAlignment_prop to Stylestring
+         attribute_String = attribute_String & " " & prop
+         End If
+      ' Determine IndentLevel_prop
+      '----------------------------------------
+      '.IndentLevel >> maybe later to come
+      ' Determine Style_prop
+      '----------------------------------------
+      '.Style  >> maybe later to come
+      '----------------------------------------
+      '.WrapText << Attribut is wiki not relevant, while unconditional default
+      '----------------------------------------
+      '
+      If stylestring <> "" Then
+          str = doublequotestring("style=" & stylestring & "@", "@")
       End If
-   ' Determine IndentLevel_prop
-   '----------------------------------------
-   '.IndentLevel >> maybe later to come
-   ' Determine Style_prop
-   '----------------------------------------
-   '.Style  >> maybe later to come
-   '----------------------------------------
-   '.WrapText << Attribut is wiki not relevant, while unconditional default
-   '----------------------------------------
-   '
-   If stylestring <> "" Then
-       str = doublequotestring("style=" & stylestring & "@", "@")
-   End If
-   str = str & doublequotestring(attribute_String, "@")
-End With
-If str <> "" Then
-    str = "|" & str
-End If
-formatstring_for_a_cellcontent = str
-End Function 'formatstring_for_a_cellcontent
+      str = str & doublequotestring(attribute_String, "@")
+      End With
+   If str <> "" Then
+       str = "|" & str
+       End If
+   formatstring_for_a_cellcontent = str
+   End Function 'formatstring_for_a_cellcontent
+   
  
- 
- 
-Function formatstring_for_a_linecontent() As String
-Dim prop As String
-Dim stylestring As String
-Dim colhexval As String
- 
+  
+  Function formatstring_for_a_linecontent() As String
+  Dim prop As String
+  Dim stylestring As String
+  Dim colhexval As String
+  
 Dim attribute_String As String
 Dim ostr As String
 With selrange.Cells(iline, 1)  'take first column as reference
@@ -670,110 +633,110 @@ With selrange.Cells(iline, 1)  'take first column as reference
    '----------------------------------------
    '.Borders
    ' do something
- 
+   
       ' Determine Font_prop
-   '========================================
-   '.Font
-   ' Determine Font prop font.size
-   '----------------------------------------
-    With .Font
-       If Not IsNull(.Size) And .Size <> 10 And lineattribut_fontsize_set Then   ' trapped ISnull-Condition and ignore standard fontsize
-            prop = "font-size:" & .Size
-            If stylestring = "" Then
-                   stylestring = "@" & prop & "pt"
-                Else
-                  stylestring = stylestring & ";" & prop & "pt"
+         '========================================
+         '.Font
+         ' Determine Font prop font.size
+         '----------------------------------------
+          With .Font
+             If Not IsNull(.Size) And .Size <> 10 And lineattribut_fontsize_set Then   ' trapped ISnull-Condition and ignore standard fontsize
+                  prop = "font-size:" & .Size
+                  If stylestring = "" Then
+                         stylestring = "@" & prop & "pt"
+                      Else
+                        stylestring = stylestring & ";" & prop & "pt"
+                   End If
              End If
-       End If
-   ' Determine Font prop font.bold
-   '----------------------------------------
-       If lineattribut_bold_set Then
-            prop = "font-weight:bold"
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
+         ' Determine Font prop font.bold
+         '----------------------------------------
+             If lineattribut_bold_set Then
+                  prop = "font-weight:bold"
+                  If stylestring = "" Then
+                         stylestring = "@" & prop
+                      Else
+                        stylestring = stylestring & ";" & prop
+                   End If
              End If
-       End If
-      ' Determine Font prop underline
-   '----------------------------------------
-       If lineattribut_italic_set Then
-            prop = "font-style:Italic"
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
+            ' Determine Font prop underline
+         '----------------------------------------
+             If lineattribut_italic_set Then
+                  prop = "font-style:Italic"
+                  If stylestring = "" Then
+                         stylestring = "@" & prop
+                      Else
+                        stylestring = stylestring & ";" & prop
+                   End If
              End If
-       End If
+             
  
- 
-      ' Determine Font prop font.italic
-   '----------------------------------------
-       If lineattribut_italic_set Then  ' toggle switch off
-                      prop = "text-decoration:underline"
-                      wasUnderlined = True ' toggle switch on
-                      If stylestring = "" Then
-                             stylestring = "@" & prop
-                          Else
-                            stylestring = stylestring & ";" & prop
-                      End If
-          End If
- 
+       ' Determine Font prop font.italic
+          '----------------------------------------
+              If lineattribut_italic_set Then  ' toggle switch off
+                             prop = "text-decoration:underline"
+                             wasUnderlined = True ' toggle switch on
+                             If stylestring = "" Then
+                                    stylestring = "@" & prop
+                                 Else
+                                   stylestring = stylestring & ";" & prop
+                             End If
+                 End If
+                 
    ' Determine Color prop font.color
-   '----------------------------------------
-       If Not IsNull(.Color) And .Color <> 0 And lineattribut_fondcolor_set Then   ' trapped ISnull-Condition and ignore standard color
-            prop = "color:#" & excelHexStr2HTML(myhex(.Color))
-            If stylestring = "" Then
-                   stylestring = "@" & prop
-                Else
-                  stylestring = stylestring & ";" & prop
-             End If
-       End If
-    End With
-   ' Determine Height_prop
-   '----------------------------------------
-   ' Determine HorizontalAlignment_prop
-   '----------------------------------------
-   '.HorizontalAlignment
-    If .HorizontalAlignment <> xlHAlignLeft And lineattribut_Halignment_set Then  ' dont write the default
-      prop = ""
-      Select Case .HorizontalAlignment
-        Case xlHAlignRight:     prop = "align=@right@"
-        Case xlHAlignCenter:  prop = "align=@center@"
-      End Select
-      ' Apply HorizontalAlignment to Stylestring
-      attribute_String = attribute_String & " " & prop
-      End If
- 
+      '----------------------------------------
+          If Not IsNull(.Color) And .Color <> 0 And lineattribut_fondcolor_set Then   ' trapped ISnull-Condition and ignore standard color
+               prop = "color:#" & excelHexStr2HTML(myhex(.Color))
+               If stylestring = "" Then
+                      stylestring = "@" & prop
+                   Else
+                     stylestring = stylestring & ";" & prop
+                End If
+          End If
+       End With
+      ' Determine Height_prop
+      '----------------------------------------
+      ' Determine HorizontalAlignment_prop
+      '----------------------------------------
+      '.HorizontalAlignment
+       If .HorizontalAlignment <> xlHAlignLeft And lineattribut_Halignment_set Then  ' dont write the default
+         prop = ""
+         Select Case .HorizontalAlignment
+           Case xlHAlignRight:     prop = "align=@right@"
+           Case xlHAlignCenter:  prop = "align=@center@"
+         End Select
+         ' Apply HorizontalAlignment to Stylestring
+         attribute_String = attribute_String & " " & prop
+         End If
+         
    ' Determine VerticalAlignment_prop
-   '----------------------------------------
-    If .VerticalAlignment <> xlVAlignCenter And lineattribut_Halignment_set Then   ' dont write the default
-    prop = ""
-      Select Case .VerticalAlignment
-        Case xlVAlignTop:     prop = "valign=@top@"
-        Case xlVAlignBottom:  prop = "valign=@bottom@"
-      End Select
-      ' Apply VerticalAlignment_prop to Stylestring
-      attribute_String = attribute_String & " " & prop
+      '----------------------------------------
+       If .VerticalAlignment <> xlVAlignCenter And lineattribut_Halignment_set Then   ' dont write the default
+       prop = ""
+         Select Case .VerticalAlignment
+           Case xlVAlignTop:     prop = "valign=@top@"
+           Case xlVAlignBottom:  prop = "valign=@bottom@"
+         End Select
+         ' Apply VerticalAlignment_prop to Stylestring
+         attribute_String = attribute_String & " " & prop
+         End If
+      ' Determine IndentLevel_prop
+      '----------------------------------------
+      '.IndentLevel >> maybe later to come
+      ' Determine Style_prop
+      '----------------------------------------
+      '.Style  >> maybe later to come
+      '----------------------------------------
+      '.WrapText << Attribut is wiki not relevant, while unconditional default
+      '----------------------------------------
+      '
+      If stylestring <> "" Then
+          ostr = doublequotestring("style=" & stylestring & "@", "@")
       End If
-   ' Determine IndentLevel_prop
-   '----------------------------------------
-   '.IndentLevel >> maybe later to come
-   ' Determine Style_prop
-   '----------------------------------------
-   '.Style  >> maybe later to come
-   '----------------------------------------
-   '.WrapText << Attribut is wiki not relevant, while unconditional default
-   '----------------------------------------
-   '
-   If stylestring <> "" Then
-       ostr = doublequotestring("style=" & stylestring & "@", "@")
-   End If
-   ostr = ostr & doublequotestring(attribute_String, "@")
-End With
-'If ostr <> "" Then
-'    ostr = "|" & ostr
-'End If
-formatstring_for_a_linecontent = ostr
- 
+      ostr = ostr & doublequotestring(attribute_String, "@")
+      End With
+   'If ostr <> "" Then
+   '    ostr = "|" & ostr
+   'End If
+   formatstring_for_a_linecontent = ostr
+   
 End Function 'formatstring_for_a_linecontent
