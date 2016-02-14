@@ -1,4 +1,4 @@
-# Excel to Wiki markup converter
+# Excel to Wiki markup generator
 
 This VBA module takes Excel selected columns/rows and converts them into Wiki-compatible tables.
 
