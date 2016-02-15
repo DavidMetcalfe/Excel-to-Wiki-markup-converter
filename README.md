@@ -2,7 +2,7 @@
 
 This VBA module takes selected columns/rows in Excel and converts them into Wiki-compatible tables.
 
-This repository contains a modified version of Othmar Lippuner's code, which can be located on the [Dutch language Wikipedia](https://de.wikipedia.org/wiki/Wikipedia:Technik/Text/Basic/EXCEL-Tabellenumwandlung), or there's an [English translation]( https://de.wikipedia.org/wiki/Wikipedia:Technik/Text/Basic/EXCEL-Tabellenumwandlung) available as well.
+This repository contains a modified version of Othmar Lippuner's code, which can be located on the [Dutch language Wikipedia](https://de.wikipedia.org/wiki/Wikipedia:Technik/Text/Basic/EXCEL-Tabellenumwandlung), or there's an [English translation]( https://de.wikipedia.org/wiki/Wikipedia:Technik/Text/Basic/EXCEL-Tabellenumwandlung/en) available as well.
 
 ## Instructions
 
